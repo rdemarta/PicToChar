@@ -5,27 +5,34 @@ import java.io.File;
 import java.io.IOException;
 
 public class PicToChar {
+    // Application parameters
+    private final String charPalette;
+    private final boolean NEGATIVE;
+    private final int TARGET_HEIGHT;
 
-    public static void main(String[] args) {
-        // Application parameters
-        final char[] CHARS = {'.', '_', '^', '*', 'O', '8', '#', '$', '@'};
-        final boolean NEGATIVE = false;
-        final int TARGET_HEIGHT = 60;
+    private final int SEGMENT; // Divide MAX_RGB into CHARS array equal segments
 
-        // Magic numbers
-        final int CHAR_WIDTH = 3; // Each char will be written CHAR_WIDTH times
-        final int MAX_RGB = 255;
-        final int SEGMENT = MAX_RGB / (CHARS.length - 1); // Divide MAX_RGB into CHARS array equal segments
+    // Magic numbers
+    private static final int CHAR_WIDTH = 3; // Each char will be written CHAR_WIDTH times
+    private static final int MAX_RGB = 255;
 
+    public PicToChar(String charPalette, boolean NEGATIVE, int TARGET_HEIGHT) {
+        this.charPalette = charPalette;
+        this.NEGATIVE = NEGATIVE;
+        this.TARGET_HEIGHT = TARGET_HEIGHT;
+        SEGMENT = MAX_RGB / (charPalette.length() - 1);
+    }
+
+    public void process(String file) {
         try {
             // Open image
-            File input = new File(args[0]);
+            File input = new File(file);
             BufferedImage image = ImageIO.read(input);
 
             // Get image's size
             int width = image.getWidth();
             int height = image.getHeight();
-            final int INCREMENT = height / TARGET_HEIGHT;
+            final int INCREMENT = height / TARGET_HEIGHT; // Pixel browsing step size
 
             // Browse all pixels
             for(int y = 0; y < height; y += INCREMENT) {
@@ -34,9 +41,9 @@ public class PicToChar {
                     Color pixel = new Color(image.getRGB(x, y));
                     int grayScale = toGrayscale(pixel);
                     int index = grayScale / SEGMENT;
-                    if(NEGATIVE) index = CHARS.length - index - 1;
+                    if(NEGATIVE) index = charPalette.length() - index - 1;
 
-                    char c = CHARS[index];
+                    char c = charPalette.charAt(index);
 
                     for(int k = 0; k < CHAR_WIDTH; ++k) System.out.print(c); // Draw on console
                 }
@@ -47,12 +54,17 @@ public class PicToChar {
         }
     }
 
+    public static void main(String[] args) {
+        PicToChar picToChar = new PicToChar("._^*O8#$@", false, 50);
+        picToChar.process("");
+    }
+
     /**
      * Converts an RGB color into one grayscaled value.
      * @param color RGB color to convert
      * @return int value [0;255]
      */
-    private static int toGrayscale(Color color) {
+    private int toGrayscale(Color color) {
         return (color.getRed() + color.getGreen() + color.getBlue()) / 3;
     }
 }
