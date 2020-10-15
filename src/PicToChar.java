@@ -6,21 +6,21 @@ import java.io.IOException;
 
 public class PicToChar {
     // Application parameters
-    private final String charPalette;
-    private final boolean negative;
+    private final String charPalette; // From non-filled (space) chars to filled ones (e.g. " ._^*O8#@$")
+    private final boolean revert;
     private final int targetHeight;
 
-    private final int segment; // Divide MAX_RGB into CHARS array equal segments
+    private final double segment; // Divide MAX_RGB into CHARS array equal segments
 
     // Magic numbers
     private static final int CHAR_WIDTH = 3; // Each char will be written CHAR_WIDTH times
     private static final int MAX_RGB = 255;
 
-    public PicToChar(String charPalette, boolean negative, int targetHeight) {
+    public PicToChar(String charPalette, boolean revert, int targetHeight) {
         this.charPalette = charPalette;
-        this.negative = negative;
+        this.revert = revert;
         this.targetHeight = targetHeight;
-        segment = MAX_RGB / (charPalette.length() - 1);
+        segment = (double)MAX_RGB / charPalette.length();
     }
 
     public void process(String file) {
@@ -32,16 +32,18 @@ public class PicToChar {
             // Get image's size
             int width = image.getWidth();
             int height = image.getHeight();
-            final int INCREMENT = height / targetHeight; // Pixel browsing step size
+            final int increment = height / targetHeight; // Pixel browsing step size
 
             // Browse all pixels
-            for(int y = 0; y < height; y += INCREMENT) {
-                for(int x = 0; x < width; x += INCREMENT) {
+            for(int y = 0; y < height; y += increment) {
+                for(int x = 0; x < width; x += increment) {
 
                     Color pixel = new Color(image.getRGB(x, y));
                     int grayScale = toGrayscale(pixel);
-                    int index = grayScale / segment;
-                    if(negative) index = charPalette.length() - index - 1;
+
+                    int index = (int)Math.round(grayScale / segment) - 1;
+                    if(index < 0) index = 0; // Avoid negative values
+                    if(revert) index = charPalette.length() - index - 1; // Reverse index
 
                     char c = charPalette.charAt(index);
 
@@ -52,13 +54,19 @@ public class PicToChar {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
 
-    public static void main(String[] args) { //"._^*O8#$@"
-        PicToChar picToChar = new PicToChar("$@B%8&WM#*oahkbdpqwmZOQLCJUYXzcvunxrjft", false, 50);
-        picToChar.process("suchet2.jpg");
-        //" ``.-:/+osyhdmNM"
-        //$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,"^`'.
+    public static void main(String[] args) {
+        PicToChar picToChar = new PicToChar(" .-+*s8#@$", false, 60);
+        picToChar.process("party.jpg");
+
+        // .-+*s8#@$
+        // .:-=+*#%@
+        // `.-:/+osyhdmNM
+        // ░▒▓█
+        // .'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$
     }
 
     /**
