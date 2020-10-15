@@ -7,20 +7,20 @@ import java.io.IOException;
 public class PicToChar {
     // Application parameters
     private final String charPalette;
-    private final boolean NEGATIVE;
-    private final int TARGET_HEIGHT;
+    private final boolean negative;
+    private final int targetHeight;
 
-    private final int SEGMENT; // Divide MAX_RGB into CHARS array equal segments
+    private final int segment; // Divide MAX_RGB into CHARS array equal segments
 
     // Magic numbers
     private static final int CHAR_WIDTH = 3; // Each char will be written CHAR_WIDTH times
     private static final int MAX_RGB = 255;
 
-    public PicToChar(String charPalette, boolean NEGATIVE, int TARGET_HEIGHT) {
+    public PicToChar(String charPalette, boolean negative, int targetHeight) {
         this.charPalette = charPalette;
-        this.NEGATIVE = NEGATIVE;
-        this.TARGET_HEIGHT = TARGET_HEIGHT;
-        SEGMENT = MAX_RGB / (charPalette.length() - 1);
+        this.negative = negative;
+        this.targetHeight = targetHeight;
+        segment = MAX_RGB / (charPalette.length() - 1);
     }
 
     public void process(String file) {
@@ -32,7 +32,7 @@ public class PicToChar {
             // Get image's size
             int width = image.getWidth();
             int height = image.getHeight();
-            final int INCREMENT = height / TARGET_HEIGHT; // Pixel browsing step size
+            final int INCREMENT = height / targetHeight; // Pixel browsing step size
 
             // Browse all pixels
             for(int y = 0; y < height; y += INCREMENT) {
@@ -40,8 +40,8 @@ public class PicToChar {
 
                     Color pixel = new Color(image.getRGB(x, y));
                     int grayScale = toGrayscale(pixel);
-                    int index = grayScale / SEGMENT;
-                    if(NEGATIVE) index = charPalette.length() - index - 1;
+                    int index = grayScale / segment;
+                    if(negative) index = charPalette.length() - index - 1;
 
                     char c = charPalette.charAt(index);
 
@@ -54,9 +54,11 @@ public class PicToChar {
         }
     }
 
-    public static void main(String[] args) {
-        PicToChar picToChar = new PicToChar("._^*O8#$@", false, 50);
-        picToChar.process("");
+    public static void main(String[] args) { //"._^*O8#$@"
+        PicToChar picToChar = new PicToChar("$@B%8&WM#*oahkbdpqwmZOQLCJUYXzcvunxrjft", false, 50);
+        picToChar.process("suchet2.jpg");
+        //" ``.-:/+osyhdmNM"
+        //$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,"^`'.
     }
 
     /**
