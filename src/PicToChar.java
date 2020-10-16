@@ -6,21 +6,43 @@ import java.io.IOException;
 
 public class PicToChar {
     // Application parameters
-    private final String charPalette; // From non-filled (space) chars to filled ones (e.g. " ._^*O8#@$")
+    private final String charset; // From non-filled (space) chars to filled ones (e.g. " ._^*O8#@$")
     private final boolean revert;
-    private final int targetHeight;
+    private final int targetHeight; // TODO percentage
 
     private final double segment; // Divide MAX_RGB into CHARS array equal segments
 
     // Magic numbers
-    private static final int CHAR_WIDTH = 3; // Each char will be written CHAR_WIDTH times
+    private static int CHAR_WIDTH = 3; // Each char will be written CHAR_WIDTH times
     private static final int MAX_RGB = 255;
+    private static final String[] CHARSET_TYPES = {
+            " .,-+*s0@$",
+            " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
+            " ░▒▓█",
+            " .-+*"
+    };
 
-    public PicToChar(String charPalette, boolean revert, int targetHeight) {
-        this.charPalette = charPalette;
+    public enum PALETTE {
+        MINIMAL,
+        EXTENDED,
+        SQUARES,
+    }
+
+    public PicToChar(PALETTE charset, boolean revert, int targetHeight) {
         this.revert = revert;
         this.targetHeight = targetHeight;
-        segment = (double)MAX_RGB / charPalette.length();
+
+        switch (charset) {
+            case EXTENDED -> this.charset = CHARSET_TYPES[1];
+            case SQUARES -> this.charset = CHARSET_TYPES[2];
+            default -> this.charset = CHARSET_TYPES[0];
+        }
+
+        segment = (double)MAX_RGB / this.charset.length();
+    }
+
+    public PicToChar() {
+        this(PALETTE.MINIMAL, false, 65);
     }
 
     public void process(String file) {
@@ -32,7 +54,7 @@ public class PicToChar {
             // Get image's size
             int width = image.getWidth();
             int height = image.getHeight();
-            final int increment = height / targetHeight; // Pixel browsing step size
+            final int increment = height / Math.min(targetHeight, height); // Pixel browsing step size
 
             // Browse all pixels
             for(int y = 0; y < height; y += increment) {
@@ -43,9 +65,9 @@ public class PicToChar {
 
                     int index = (int)Math.round(grayScale / segment) - 1;
                     if(index < 0) index = 0; // Avoid negative values
-                    if(revert) index = charPalette.length() - index - 1; // Reverse index
+                    if(revert) index = charset.length() - index - 1; // Reverse index
 
-                    char c = charPalette.charAt(index);
+                    char c = charset.charAt(index);
 
                     for(int k = 0; k < CHAR_WIDTH; ++k) System.out.print(c); // Draw on console
                 }
@@ -59,14 +81,8 @@ public class PicToChar {
     }
 
     public static void main(String[] args) {
-        PicToChar picToChar = new PicToChar(" .-+*s8#@$", false, 60);
-        picToChar.process("party.jpg");
-
-        // .-+*s8#@$
-        // .:-=+*#%@
-        // `.-:/+osyhdmNM
-        // ░▒▓█
-        // .'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$
+        PicToChar picToChar = new PicToChar(PALETTE.SQUARES, false, 200);
+        picToChar.process("isaac.jpeg");
     }
 
     /**
